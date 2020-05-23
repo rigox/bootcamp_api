@@ -1,7 +1,7 @@
 const colors =  require("colors")
 const dotenv =   require("dotenv")
 const express  = require("express")
-
+const morgan =  require("morgan")
 // Load env vars
 dotenv.config({path:'./config/config.env'})
 const app =  express()
@@ -9,6 +9,11 @@ const app =  express()
 
 //Set up middleware
 app.use(express.urlencoded(), express.json())
+
+const logger  = (req,res,next)=>{
+      3
+}
+
 
 //Load Routes
 const bootcamps =  require('./routes/bootcamps')
