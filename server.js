@@ -1,19 +1,26 @@
+const cors = require("cors")
 const colors =  require("colors")
 const dotenv =   require("dotenv")
 const express  = require("express")
 const morgan =  require("morgan")
+
+//inhouse imports
+const db =  require("./config/db")
+const errorHandler = require("./middleware/error")
 // Load env vars
 dotenv.config({path:'./config/config.env'})
 const app =  express()
 
+//load Database 
+db();
 
 //Set up middleware
 app.use(express.urlencoded(), express.json())
-
-const logger  = (req,res,next)=>{
-      3
+app.use(cors())
+// Dev loggin middleware
+if(process.env.NODE_ENV=="development"){
+     app.use(morgan('dev'));
 }
-
 
 //Load Routes
 const bootcamps =  require('./routes/bootcamps')
@@ -24,11 +31,19 @@ const bootcamps =  require('./routes/bootcamps')
 app.get('/',(req,res)=>{ res.send('welcome to the  bootcamp api')})
 
 app.use('/api/v1/bootcamps', bootcamps)
+   app.use(errorHandler)
 
 
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT
+const server = app.listen(PORT
     ,()=>{
     console.log(`server running on ${process.env.NODE_ENV} mode on port ${PORT}`.green)
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection',(err,promise)=>{
+         console.log(`Error: ${err.message}`.red.bold);
+         //close server and exit process
+         server.close(()=>{process.exit(1)});
 });
