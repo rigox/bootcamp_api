@@ -100,7 +100,12 @@ const BootcampSchema = new Schema({
       createdAt: {
         type: Date,
         default: Date.now
-      }
+      },
+      user:{
+        type:Schema.ObjectId,
+        ref:'users',
+        required:true
+     }
 },{
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

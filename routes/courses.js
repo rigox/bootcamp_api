@@ -5,6 +5,7 @@ const Course =  require("../models/Course")
 
 //Middleware
 const advResults =  require('../middleware/advancedResults');
+const {protect} =  require('../middleware/auth')
 
 const {getCourses,
        getCourse,
@@ -18,14 +19,14 @@ const {getCourses,
 router
     .route('/')
         .get(advResults(Course),getCourses)
-        .post(addCourse)
+        .post(protect,addCourse)
 
 
 router
     .route('/:id')
         .get(getCourse)
-        .put(updateCourse)
-        .delete(deleteCourse)
+        .put(protect,updateCourse)
+        .delete(protect,deleteCourse)
     
 
 

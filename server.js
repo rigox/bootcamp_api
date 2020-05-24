@@ -4,6 +4,7 @@ const dotenv =   require("dotenv")
 const express  = require("express")
 const morgan =  require("morgan")
 const path =  require("path")
+const cookieParser =  require("cookie-parser")
 const expressFileUpload =  require("express-fileupload")
 //inhouse imports
 const db =  require("./config/db")
@@ -23,14 +24,14 @@ if(process.env.NODE_ENV=="development"){
      app.use(morgan('dev'));
 }
 app.use(expressFileUpload())
-
+app.use(cookieParser())
 //setup static folder
 app.use(express.static(path.join(__dirname,'public')))
 
 //Load Routes
 const bootcamps =  require('./routes/bootcamps');
 const courses =  require('./routes/courses');
-
+const auth =  require('./routes/auth');
 
 //Set up routes
 app.get('/',(req,res)=>{ res.send('welcome to the  bootcamp api')})
@@ -38,6 +39,8 @@ app.get('/',(req,res)=>{ res.send('welcome to the  bootcamp api')})
 app.use('/api/v1/bootcamps', bootcamps)
 
 app.use('/api/v1/courses',courses)
+
+app.use('/api/v1/auth',auth)
 
 //setup errorhandler middleware
 app.use(errorHandler)
