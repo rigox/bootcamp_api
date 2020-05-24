@@ -1,18 +1,20 @@
+const geocoder =  require("../utils/geocoder");
 const Bootcamp =  require('../models/Bootcamp');
 const errorResponse =  require('../utils/errorResponse')
+const path  =  require("path")
 const asyncHandler =  require("../middleware/async")
+
+
+
 
 //@Desc  Get All Bootcamps
 //@Method GET /api/v1/bootcamps
 //@Access Public
 exports.getBootcamps = asyncHandler(  async(req,res,next) => {
-          const bootcamps =  await  Bootcamp.find();
+  
+   
           res.status(200)
-          .json({
-               success:true,
-               count: bootcamps.length  ,
-               data:bootcamps
-          })
+          .json(res.advancedResults)
      
 });
 
@@ -77,13 +79,98 @@ exports.updateBootcamp = asyncHandler( async (req,res,next) =>{
 //@Method  DELETE /api/v1/bootcamps/:id
 //@Access private
 exports.deleteBootcamp = asyncHandler( async (req,res,next) =>{
-    const deleteBootcamp =  await  Bootcamp.findByIdAndDelete(req.params.id)
+    const deleteBootcamp =  await  Bootcamp.findById(req.params.id)
     if(!deleteBootcamp){
         return res.status(400).json({success:false})
    }
+
+   deleteBootcamp.remove()
     res.status(200)
     .json({
          sucess:true,
          data:{}
     })
 });
+
+
+//@Desc Gets  Bootcamps between a  radius
+//@Method  GET /api/v1/bootcamps/radius/:zip/:distance
+//@Access private
+exports.getBootcampsInRadius =  asyncHandler(async (req,res,next)=>{
+     const {zipcode , distance} = req.params;
+      
+     
+     //Get Latitude and Longitude
+
+    const  loc =  await geocoder.geocode(zipcode);
+    console.log('here is the loc'.blue, loc)
+    const lat  = loc[0].latitude
+    const lang =  loc[0].longitude
+
+    //calc radius usinf radians
+    // divide distance by radius of earth
+    // Earth radius -  3,963 miles / 6378 km
+
+    const radius  = distance / 3963
+
+    const bootcamps =  await Bootcamp.find({
+         location : {$geoWithin:{$centerSphere:[ [lang,lat] ,radius] }  }
+    }) 
+
+    res.status(200).json({
+         sucess:true,
+         count: bootcamps.length,
+         data: bootcamps
+    })
+
+});
+
+//@Desc  uploads a photo for  Bootcamp
+//@Route  PUT /api/v1/bootcamps/:id/photo
+//@Access private
+exports.bootcampPhotoUpload =  asyncHandler(async (req,res,next)=>{
+      const bootcamp =  await  Bootcamp.findById(req.params.id);
+      if(!bootcamp){
+        return next(new errorResponse(`Bootcamp not found with id of ${req.params.id}`,404))
+      }  
+
+      if(!req.files){
+        return next(new errorResponse(`Pleasea attach an  image to upload`,400))    
+      }
+  
+      const file =  req.files.file
+
+      //make sure the file is an image
+
+      if(!file.mimetype.startsWith('image')){
+        return next(new errorResponse('please the  file must be if  image file like jpg',400))
+      }
+
+      //check the file size
+
+      if(file.size > process.env.MAX_FILE_UPLOAD){
+          return next(new errorResponse(`please upload an image less than ${process.env.MAX_FILE_UPLOAD}`))
+      }
+
+
+      //Create custome file name
+
+      file.name = `photo_${bootcamp._id}${path.parse(file.name).ext}`;
+
+      file.mv(`${process.env.FILE_UPLOAD_PATH}/${file.name}`,async err=>{
+           if(err){
+               console.log(err)
+               return next(errorResponse(`Problem with file upload`,500))
+           }
+      }) 
+
+      await Bootcamp.findByIdAndUpdate(req.params.id,{photo:file.name})
+
+      res.status(200).json({
+            success:true,
+            data:file.name
+      })
+
+});
+
+

@@ -3,7 +3,8 @@ const colors =  require("colors")
 const dotenv =   require("dotenv")
 const express  = require("express")
 const morgan =  require("morgan")
-
+const path =  require("path")
+const expressFileUpload =  require("express-fileupload")
 //inhouse imports
 const db =  require("./config/db")
 const errorHandler = require("./middleware/error")
@@ -21,17 +22,25 @@ app.use(cors())
 if(process.env.NODE_ENV=="development"){
      app.use(morgan('dev'));
 }
+app.use(expressFileUpload())
+
+//setup static folder
+app.use(express.static(path.join(__dirname,'public')))
 
 //Load Routes
-const bootcamps =  require('./routes/bootcamps')
-
+const bootcamps =  require('./routes/bootcamps');
+const courses =  require('./routes/courses');
 
 
 //Set up routes
 app.get('/',(req,res)=>{ res.send('welcome to the  bootcamp api')})
 
 app.use('/api/v1/bootcamps', bootcamps)
-   app.use(errorHandler)
+
+app.use('/api/v1/courses',courses)
+
+//setup errorhandler middleware
+app.use(errorHandler)
 
 
 const PORT = process.env.PORT || 5001;

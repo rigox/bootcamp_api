@@ -100,7 +100,10 @@ const BootcampSchema = new Schema({
       createdAt: {
         type: Date,
         default: Date.now
-      },
+      }
+},{
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 //Create bootcamp slug from the name
@@ -130,4 +133,20 @@ BootcampSchema.pre('save',async function(next){
     next();
 });
 
-module.exports =  moongose.model('Bootcamp', BootcampSchema);
+//Cascade Delete courses when a bootcamp is deleted
+BootcampSchema.pre('remove',async function(next){
+     console.log(`Courses being removed from bootcamp${this.id}`)    
+    await this.model('courses').deleteMany({bootcamp:this._id})
+        next();
+});
+
+
+//Reverse populate with virtuals
+BootcampSchema.virtual('courses',{
+     ref:'courses',
+     localField:'_id',
+     foreignField: 'bootcamp',
+     justOne: false
+})
+
+module.exports =  moongose.model('bootcamps', BootcampSchema);
