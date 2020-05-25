@@ -38,7 +38,12 @@ bootcamp:{
    type:Schema.ObjectId,
    ref:'bootcamps',
    required:true
-}
+},
+user:{
+    type:Schema.ObjectId,
+    ref:'users',
+    required:true
+ }
 
 
 });
