@@ -6,6 +6,12 @@ const morgan =  require("morgan")
 const path =  require("path")
 const cookieParser =  require("cookie-parser")
 const expressFileUpload =  require("express-fileupload")
+const mongoSanitizer =  require("express-mongo-sanitize")
+const helmet =  require("helmet")
+const xss =  require("xss-clean")
+const rateLimit =  require("express-rate-limit")
+const hpp =  require("hpp")
+
 //inhouse imports
 const db =  require("./config/db")
 const errorHandler = require("./middleware/error")
@@ -18,11 +24,37 @@ db();
 
 //Set up middleware
 app.use(express.urlencoded(), express.json())
+
+
+//enable cors
 app.use(cors())
 // Dev loggin middleware
 if(process.env.NODE_ENV=="development"){
      app.use(morgan('dev'));
 }
+
+//sanitize data
+app.use(mongoSanitizer())
+
+//add headers that help with security 
+app.use(helmet())
+
+//xxs prevents cross site scriptin
+app.use(xss())
+
+
+//rate limiting
+const limiter =  rateLimit({
+    windowMs:10 * 60 * 1000, // 10 mins
+    max:100
+})
+
+app.use(limiter);
+
+//prevents http params pollution
+app.use(hpp())
+
+
 app.use(expressFileUpload())
 app.use(cookieParser())
 //setup static folder

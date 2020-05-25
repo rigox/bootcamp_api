@@ -10,7 +10,8 @@ const  {
      forgotPassword,
      resetPassword,
      updateDetails,
-     updatePassword
+     updatePassword,
+     logout
 } = require('../controllers/auth')
 
 router 
@@ -39,5 +40,9 @@ router
         router
         .route('/updatePassword')
             .put(protect,updatePassword)
+
+router
+    .route('/logout')
+        .get(protect,logout)
 
 module.exports = router
